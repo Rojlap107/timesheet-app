@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import { timesheetAPI } from '../services/api';
 import TimeEntryRow from './TimeEntryRow';
-import EditModal from './EditModal';
 
-function TimesheetForm() {
+function TimesheetForm({ user }) {
   const [companies, setCompanies] = useState([]);
-  const [workIds, setWorkIds] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [entries, setEntries] = useState([]);
+  const [jobTypes, setJobTypes] = useState([]);
+  const [crewChiefs, setCrewChiefs] = useState([]);
+  const [newCrewChiefName, setNewCrewChiefName] = useState('');
 
   const [formData, setFormData] = useState({
-    company_id: '',
-    work_id: '',
-    employee_id: '',
-    entry_date: new Date().toISOString().split('T')[0]
+    company_id: user.role === 'program_manager' ? user.company_id : '',
+    crew_chief_id: '',
+    entry_date: new Date().toISOString().split('T')[0],
+    unique_number: '',
+    job_type: ''
   });
 
   const [timeEntries, setTimeEntries] = useState([
@@ -22,40 +22,72 @@ function TimesheetForm() {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [editingEntry, setEditingEntry] = useState(null);
 
   useEffect(() => {
     loadReferenceData();
-    loadEntries();
   }, []);
+
+  useEffect(() => {
+    if (formData.company_id) {
+      loadCrewChiefs(formData.company_id);
+    }
+  }, [formData.company_id]);
 
   const loadReferenceData = async () => {
     try {
-      const [companiesRes, workIdsRes, employeesRes] = await Promise.all([
-        timesheetAPI.getCompanies(),
-        timesheetAPI.getWorkIds(),
-        timesheetAPI.getEmployees()
-      ]);
+      const jobTypesRes = await timesheetAPI.getJobTypes();
+      setJobTypes(jobTypesRes.data);
 
-      setCompanies(companiesRes.data);
-      setWorkIds(workIdsRes.data);
-      setEmployees(employeesRes.data);
+      if (user.role === 'admin') {
+        const companiesRes = await timesheetAPI.getCompanies();
+        setCompanies(companiesRes.data);
+      } else {
+        const companiesRes = await timesheetAPI.getCompanies();
+        const userCompany = companiesRes.data.find(c => c.id === user.company_id);
+        setCompanies(userCompany ? [userCompany] : []);
+        if (user.company_id) {
+          loadCrewChiefs(user.company_id);
+        }
+      }
     } catch (error) {
       console.error('Failed to load reference data:', error);
     }
   };
 
-  const loadEntries = async () => {
+  const loadCrewChiefs = async (companyId) => {
     try {
-      const response = await timesheetAPI.getEntries();
-      setEntries(response.data);
+      const response = await timesheetAPI.getCrewChiefs(companyId);
+      setCrewChiefs(response.data);
     } catch (error) {
-      console.error('Failed to load entries:', error);
+      console.error('Failed to load crew chiefs:', error);
     }
   };
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
+  };
+
+  const handleCrewChiefSelection = (value) => {
+    if (value === 'new') {
+      setFormData({ ...formData, crew_chief_id: 'new' });
+    } else {
+      setFormData({ ...formData, crew_chief_id: value });
+      setNewCrewChiefName('');
+    }
+  };
+
+  const generateJobIdPreview = () => {
+    if (!formData.company_id || !formData.unique_number || !formData.job_type) {
+      return 'Job ID will appear here';
+    }
+
+    const company = companies.find(c => c.id === parseInt(formData.company_id));
+    if (!company) return 'Job ID will appear here';
+
+    const year = new Date(formData.entry_date).getFullYear().toString().slice(-2);
+    const num = formData.unique_number.padStart(4, '0');
+
+    return `${company.abbreviation}-${year}-${num}-${formData.job_type}`;
   };
 
   const handleTimeEntryChange = (index, field, value) => {
@@ -84,17 +116,12 @@ function TimesheetForm() {
       if (entry.time_in && entry.time_out) {
         const [inHour, inMin] = entry.time_in.split(':').map(Number);
         const [outHour, outMin] = entry.time_out.split(':').map(Number);
-
-        const inTotalMin = inHour * 60 + inMin;
-        const outTotalMin = outHour * 60 + outMin;
-
-        totalMinutes += outTotalMin - inTotalMin;
+        totalMinutes += (outHour * 60 + outMin) - (inHour * 60 + inMin);
       }
     });
 
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-
     return `${hours}h ${minutes}m`;
   };
 
@@ -104,8 +131,26 @@ function TimesheetForm() {
     setMessage('');
 
     try {
+      let crewChiefId = formData.crew_chief_id;
+
+      // Create new crew chief if needed
+      if (crewChiefId === 'new' && newCrewChiefName) {
+        const response = await timesheetAPI.createCrewChief({
+          name: newCrewChiefName,
+          company_id: formData.company_id
+        });
+        crewChiefId = response.data.id;
+
+        // Reload crew chiefs
+        await loadCrewChiefs(formData.company_id);
+      }
+
       await timesheetAPI.createEntry({
-        ...formData,
+        company_id: formData.company_id,
+        crew_chief_id: crewChiefId,
+        entry_date: formData.entry_date,
+        unique_number: formData.unique_number,
+        job_type: formData.job_type,
         time_entries: timeEntries
       });
 
@@ -113,48 +158,22 @@ function TimesheetForm() {
 
       // Reset form
       setFormData({
-        company_id: '',
-        work_id: '',
-        employee_id: '',
-        entry_date: new Date().toISOString().split('T')[0]
+        company_id: user.role === 'program_manager' ? user.company_id : '',
+        crew_chief_id: '',
+        entry_date: new Date().toISOString().split('T')[0],
+        unique_number: '',
+        job_type: ''
       });
       setTimeEntries([{ time_in: '09:00', time_out: '17:00' }]);
-
-      // Reload entries
-      loadEntries();
+      setNewCrewChiefName('');
 
       setTimeout(() => setMessage(''), 5000);
     } catch (error) {
-      setMessage(error.response?.data?.error || 'Failed to create entry');
+      const errorMsg = error.response?.data?.error || 'Failed to create entry';
+      setMessage(errorMsg);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEdit = (entry) => {
-    setEditingEntry(entry);
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this entry?')) {
-      return;
-    }
-
-    try {
-      await timesheetAPI.deleteEntry(id);
-      setMessage('Entry deleted successfully');
-      loadEntries();
-      setTimeout(() => setMessage(''), 3000);
-    } catch (error) {
-      setMessage('Failed to delete entry');
-    }
-  };
-
-  const handleEditSave = async () => {
-    loadEntries();
-    setEditingEntry(null);
-    setMessage('Entry updated successfully');
-    setTimeout(() => setMessage(''), 3000);
   };
 
   return (
@@ -162,7 +181,7 @@ function TimesheetForm() {
       <h2>New Timesheet Entry</h2>
 
       <form onSubmit={handleSubmit} className="timesheet-form">
-        <div className="form-row">
+        {user.role === 'admin' && (
           <div className="form-group">
             <label htmlFor="company">Company *</label>
             <select
@@ -174,48 +193,14 @@ function TimesheetForm() {
               <option value="">Select Company</option>
               {companies.map((company) => (
                 <option key={company.id} value={company.id}>
-                  {company.name}
+                  {company.name} ({company.abbreviation})
                 </option>
               ))}
             </select>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="workId">Work ID *</label>
-            <select
-              id="workId"
-              value={formData.work_id}
-              onChange={(e) => handleInputChange('work_id', e.target.value)}
-              required
-            >
-              <option value="">Select Work ID</option>
-              {workIds.map((work) => (
-                <option key={work.id} value={work.id}>
-                  {work.work_id} - {work.description}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        )}
 
         <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="employee">Employee *</label>
-            <select
-              id="employee"
-              value={formData.employee_id}
-              onChange={(e) => handleInputChange('employee_id', e.target.value)}
-              required
-            >
-              <option value="">Select Employee</option>
-              {employees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name} ({employee.employee_code})
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className="form-group">
             <label htmlFor="date">Date *</label>
             <input
@@ -226,7 +211,75 @@ function TimesheetForm() {
               required
             />
           </div>
+
+          <div className="form-group">
+            <label htmlFor="uniqueNum">Unique Number (4 digits) *</label>
+            <input
+              type="text"
+              id="uniqueNum"
+              value={formData.unique_number}
+              onChange={(e) => handleInputChange('unique_number', e.target.value)}
+              pattern="[0-9]{1,4}"
+              maxLength="4"
+              placeholder="0223"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="jobType">Job Type *</label>
+            <select
+              id="jobType"
+              value={formData.job_type}
+              onChange={(e) => handleInputChange('job_type', e.target.value)}
+              required
+            >
+              <option value="">Select Type</option>
+              {jobTypes.map((type) => (
+                <option key={type.code} value={type.code}>
+                  {type.name} ({type.code})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+
+        <div className="job-id-preview">
+          <strong>Job ID: </strong>
+          <span>{generateJobIdPreview()}</span>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="crewChief">Crew Chief / Project Manager *</label>
+          <select
+            id="crewChief"
+            value={formData.crew_chief_id}
+            onChange={(e) => handleCrewChiefSelection(e.target.value)}
+            required
+          >
+            <option value="">Select Crew Chief</option>
+            {crewChiefs.map((cc) => (
+              <option key={cc.id} value={cc.id}>
+                {cc.name} {cc.employee_code && `(${cc.employee_code})`}
+              </option>
+            ))}
+            <option value="new">+ Add New Crew Chief</option>
+          </select>
+        </div>
+
+        {formData.crew_chief_id === 'new' && (
+          <div className="form-group">
+            <label htmlFor="newCrewChief">New Crew Chief Name *</label>
+            <input
+              type="text"
+              id="newCrewChief"
+              value={newCrewChiefName}
+              onChange={(e) => setNewCrewChiefName(e.target.value)}
+              placeholder="Enter name"
+              required
+            />
+          </div>
+        )}
 
         <div className="time-entries-section">
           <h3>Time Entries</h3>
@@ -250,79 +303,16 @@ function TimesheetForm() {
           <strong>Total Hours: {calculateTotalHours()}</strong>
         </div>
 
-        {message && <div className={message.includes('success') ? 'success-message' : 'error-message'}>{message}</div>}
+        {message && (
+          <div className={message.includes('success') ? 'success-message' : 'error-message'}>
+            {message}
+          </div>
+        )}
 
         <button type="submit" disabled={loading} className="btn-primary">
           {loading ? 'Submitting...' : 'Submit Timesheet'}
         </button>
       </form>
-
-      <div className="entries-list">
-        <h2>Recent Entries</h2>
-
-        {entries.length === 0 ? (
-          <p>No entries yet</p>
-        ) : (
-          <table className="entries-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Company</th>
-                <th>Work ID</th>
-                <th>Employee</th>
-                <th>Total Hours</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => {
-                const totalHours = entry.time_entries?.length > 0 ? (() => {
-                  let totalMinutes = 0;
-                  entry.time_entries.forEach((te) => {
-                    const [inHour, inMin] = te.time_in.split(':').map(Number);
-                    const [outHour, outMin] = te.time_out.split(':').map(Number);
-                    totalMinutes += (outHour * 60 + outMin) - (inHour * 60 + inMin);
-                  });
-                  const hours = Math.floor(totalMinutes / 60);
-                  const minutes = totalMinutes % 60;
-                  return `${hours}h ${minutes}m`;
-                })() : '0h 0m';
-
-                return (
-                  <tr key={entry.id}>
-                    <td>{entry.unique_id}</td>
-                    <td>{entry.entry_date}</td>
-                    <td>{entry.company_name}</td>
-                    <td>{entry.work_id}</td>
-                    <td>{entry.employee_name}</td>
-                    <td>{totalHours}</td>
-                    <td>
-                      <button onClick={() => handleEdit(entry)} className="btn-edit">
-                        Edit
-                      </button>
-                      <button onClick={() => handleDelete(entry.id)} className="btn-delete">
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {editingEntry && (
-        <EditModal
-          entry={editingEntry}
-          companies={companies}
-          workIds={workIds}
-          employees={employees}
-          onClose={() => setEditingEntry(null)}
-          onSave={handleEditSave}
-        />
-      )}
     </div>
   );
 }

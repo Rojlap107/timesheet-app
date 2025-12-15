@@ -27,9 +27,20 @@ router.post('/login', (req, res) => {
       if (passwordMatch) {
         req.session.userId = user.id;
         req.session.username = user.username;
+        req.session.fullName = user.full_name;
+        req.session.role = user.role;
+        req.session.companyId = user.company_id;
+
         res.json({
           message: 'Login successful',
-          user: { id: user.id, username: user.username, email: user.email }
+          user: {
+            id: user.id,
+            username: user.username,
+            full_name: user.full_name,
+            email: user.email,
+            role: user.role,
+            company_id: user.company_id
+          }
         });
       } else {
         res.status(401).json({ error: 'Invalid username or password' });
@@ -55,7 +66,13 @@ router.get('/check', (req, res) => {
   if (req.session && req.session.userId) {
     res.json({
       authenticated: true,
-      user: { id: req.session.userId, username: req.session.username }
+      user: {
+        id: req.session.userId,
+        username: req.session.username,
+        full_name: req.session.fullName,
+        role: req.session.role,
+        company_id: req.session.companyId
+      }
     });
   } else {
     res.json({ authenticated: false });

@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { timesheetAPI } from '../services/api';
 import TimeEntryRow from './TimeEntryRow';
 
-function EditModal({ entry, companies, workIds, employees, onClose, onSave }) {
+function EditModal({ entry, user, onClose, onSave }) {
+  const [companies, setCompanies] = useState([]);
+  const [crewChiefs, setCrewChiefs] = useState([]);
+
   const [formData, setFormData] = useState({
     company_id: '',
-    work_id: '',
-    employee_id: '',
+    crew_chief_id: '',
     entry_date: ''
   });
 
@@ -15,16 +17,47 @@ function EditModal({ entry, companies, workIds, employees, onClose, onSave }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    loadCompanies();
+  }, []);
+
+  useEffect(() => {
     if (entry) {
       setFormData({
         company_id: entry.company_id,
-        work_id: entry.work_id,
-        employee_id: entry.employee_id,
+        crew_chief_id: entry.crew_chief_id,
         entry_date: entry.entry_date
       });
       setTimeEntries(entry.time_entries || [{ time_in: '09:00', time_out: '17:00' }]);
+
+      if (entry.company_id) {
+        loadCrewChiefs(entry.company_id);
+      }
     }
   }, [entry]);
+
+  useEffect(() => {
+    if (formData.company_id) {
+      loadCrewChiefs(formData.company_id);
+    }
+  }, [formData.company_id]);
+
+  const loadCompanies = async () => {
+    try {
+      const response = await timesheetAPI.getCompanies();
+      setCompanies(response.data);
+    } catch (error) {
+      console.error('Failed to load companies:', error);
+    }
+  };
+
+  const loadCrewChiefs = async (companyId) => {
+    try {
+      const response = await timesheetAPI.getCrewChiefs(companyId);
+      setCrewChiefs(response.data);
+    } catch (error) {
+      console.error('Failed to load crew chiefs:', error);
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
@@ -53,17 +86,12 @@ function EditModal({ entry, companies, workIds, employees, onClose, onSave }) {
       if (entry.time_in && entry.time_out) {
         const [inHour, inMin] = entry.time_in.split(':').map(Number);
         const [outHour, outMin] = entry.time_out.split(':').map(Number);
-
-        const inTotalMin = inHour * 60 + inMin;
-        const outTotalMin = outHour * 60 + outMin;
-
-        totalMinutes += outTotalMin - inTotalMin;
+        totalMinutes += (outHour * 60 + outMin) - (inHour * 60 + inMin);
       }
     });
 
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-
     return `${hours}h ${minutes}m`;
   };
 
@@ -95,7 +123,18 @@ function EditModal({ entry, companies, workIds, employees, onClose, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-row">
+          <div className="form-group">
+            <label>Job ID</label>
+            <input
+              type="text"
+              value={entry.job_id}
+              disabled
+              className="readonly-field"
+            />
+            <small>Job ID cannot be changed after creation</small>
+          </div>
+
+          {user.role === 'admin' && (
             <div className="form-group">
               <label htmlFor="edit-company">Company *</label>
               <select
@@ -112,38 +151,21 @@ function EditModal({ entry, companies, workIds, employees, onClose, onSave }) {
                 ))}
               </select>
             </div>
-
-            <div className="form-group">
-              <label htmlFor="edit-workId">Work ID *</label>
-              <select
-                id="edit-workId"
-                value={formData.work_id}
-                onChange={(e) => handleInputChange('work_id', e.target.value)}
-                required
-              >
-                <option value="">Select Work ID</option>
-                {workIds.map((work) => (
-                  <option key={work.id} value={work.id}>
-                    {work.work_id} - {work.description}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          )}
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="edit-employee">Employee *</label>
+              <label htmlFor="edit-crewChief">Crew Chief *</label>
               <select
-                id="edit-employee"
-                value={formData.employee_id}
-                onChange={(e) => handleInputChange('employee_id', e.target.value)}
+                id="edit-crewChief"
+                value={formData.crew_chief_id}
+                onChange={(e) => handleInputChange('crew_chief_id', e.target.value)}
                 required
               >
-                <option value="">Select Employee</option>
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.name} ({employee.employee_code})
+                <option value="">Select Crew Chief</option>
+                {crewChiefs.map((cc) => (
+                  <option key={cc.id} value={cc.id}>
+                    {cc.name} {cc.employee_code && `(${cc.employee_code})`}
                   </option>
                 ))}
               </select>

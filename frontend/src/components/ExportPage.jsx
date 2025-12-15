@@ -124,8 +124,8 @@ function ExportPage() {
                 <th>ID</th>
                 <th>Date</th>
                 <th>Company</th>
-                <th>Work ID</th>
-                <th>Employee</th>
+                <th>Job ID</th>
+                <th>Crew Chief</th>
                 <th>Time Entries</th>
                 <th>Total Hours</th>
               </tr>
@@ -136,8 +136,8 @@ function ExportPage() {
                   <td>{entry.unique_id}</td>
                   <td>{entry.entry_date}</td>
                   <td>{entry.company_name}</td>
-                  <td>{entry.work_id}</td>
-                  <td>{entry.employee_name}</td>
+                  <td>{entry.job_id}</td>
+                  <td>{entry.crew_chief_name}</td>
                   <td>
                     {entry.time_entries?.map((te, idx) => (
                       <div key={idx}>

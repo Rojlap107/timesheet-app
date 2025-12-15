@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { initializeDatabase, seedDatabase } from './config/database.js';
 import authRoutes from './routes/auth.js';
+import usersRoutes from './routes/users.js';
 import timesheetRoutes from './routes/timesheet.js';
 import exportRoutes from './routes/export.js';
 
@@ -39,6 +40,7 @@ app.use(session({
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
 app.use('/api/timesheet', timesheetRoutes);
 app.use('/api/export', exportRoutes);
 

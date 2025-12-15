@@ -1,40 +1,53 @@
 import express from 'express';
 import { db } from '../config/database.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, attachUserRole } from '../middleware/auth.js';
 import { generateExcelFile } from '../utils/excelGenerator.js';
 
 const router = express.Router();
 
-// Export to Excel
-router.get('/excel', requireAuth, (req, res) => {
+// Export to Excel with role-based filtering
+router.get('/excel', requireAuth, attachUserRole, (req, res) => {
   const { start_date, end_date } = req.query;
 
   let query = `
     SELECT
       te.id,
       te.unique_id,
+      te.job_id,
       te.entry_date,
       c.name as company_name,
-      w.work_id,
-      e.name as employee_name,
-      e.employee_code
+      cc.name as crew_chief_name,
+      cc.employee_code,
+      COALESCE(u.full_name, u.username) as created_by
     FROM timesheet_entries te
     JOIN companies c ON te.company_id = c.id
-    JOIN work_ids w ON te.work_id = w.id
-    JOIN employees e ON te.employee_id = e.id
+    JOIN crew_chiefs cc ON te.crew_chief_id = cc.id
+    JOIN users u ON te.user_id = u.id
   `;
 
   const params = [];
+  const whereClauses = [];
 
+  // Role-based filtering
+  if (req.user && req.user.role === 'program_manager') {
+    whereClauses.push('te.user_id = ?');
+    params.push(req.user.id);
+  }
+
+  // Date filtering
   if (start_date && end_date) {
-    query += ' WHERE te.entry_date BETWEEN ? AND ?';
+    whereClauses.push('te.entry_date BETWEEN ? AND ?');
     params.push(start_date, end_date);
   } else if (start_date) {
-    query += ' WHERE te.entry_date >= ?';
+    whereClauses.push('te.entry_date >= ?');
     params.push(start_date);
   } else if (end_date) {
-    query += ' WHERE te.entry_date <= ?';
+    whereClauses.push('te.entry_date <= ?');
     params.push(end_date);
+  }
+
+  if (whereClauses.length > 0) {
+    query += ' WHERE ' + whereClauses.join(' AND ');
   }
 
   query += ' ORDER BY te.entry_date ASC';

@@ -43,26 +43,40 @@ function formatTimeEntries(timeEntries) {
 
 // Send timesheet email notification
 export async function sendTimesheetEmail(timesheetData) {
-  const { unique_id, employee_name, company_name, work_id, work_description, entry_date, time_entries } = timesheetData;
+  const {
+    unique_id,
+    job_id,
+    crew_chief_name,
+    company_name,
+    company_email,
+    email_enabled,
+    entry_date,
+    time_entries
+  } = timesheetData;
+
+  // Check if email is enabled for this company
+  if (!email_enabled || !company_email) {
+    console.log(`Email notifications disabled for ${company_name}`);
+    return;
+  }
 
   const totalHours = calculateTotalHours(time_entries);
   const timeEntriesFormatted = formatTimeEntries(time_entries);
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: process.env.RECIPIENT_EMAIL,
-    subject: `New Timesheet Entry - ${entry_date}`,
+    to: company_email,
+    subject: `New Timesheet Entry - ${job_id} - ${entry_date}`,
     text: `
 New Timesheet Entry Submitted
 ==============================
 
 Entry ID: ${unique_id}
+Job ID: ${job_id}
 Date: ${entry_date}
 
-Employee: ${employee_name}
+Crew Chief: ${crew_chief_name}
 Company: ${company_name}
-Work ID: ${work_id}
-Project: ${work_description}
 
 Time Entries:
 ${timeEntriesFormatted}
@@ -76,7 +90,7 @@ This is an automated notification from the Timesheet Management System.
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`Email sent for timesheet entry ${unique_id}`);
+    console.log(`Email sent to ${company_email} for timesheet entry ${unique_id}`);
   } catch (error) {
     console.error('Error sending email:', error);
     throw error;

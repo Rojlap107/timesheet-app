@@ -23,16 +23,34 @@ export const authAPI = {
     api.get('/auth/check')
 };
 
+// User Management APIs
+export const userAPI = {
+  getUsers: () =>
+    api.get('/users'),
+
+  createUser: (data) =>
+    api.post('/users', data),
+
+  updateUser: (id, data) =>
+    api.put(`/users/${id}`, data),
+
+  deleteUser: (id) =>
+    api.delete(`/users/${id}`)
+};
+
 // Timesheet APIs
 export const timesheetAPI = {
   getCompanies: () =>
     api.get('/timesheet/companies'),
 
-  getWorkIds: () =>
-    api.get('/timesheet/work-ids'),
+  getJobTypes: () =>
+    api.get('/timesheet/job-types'),
 
-  getEmployees: () =>
-    api.get('/timesheet/employees'),
+  getCrewChiefs: (companyId = null) =>
+    api.get('/timesheet/crew-chiefs', companyId ? { params: { company_id: companyId } } : {}),
+
+  createCrewChief: (data) =>
+    api.post('/timesheet/crew-chiefs', data),
 
   getEntries: (params = {}) =>
     api.get('/timesheet/entries', { params }),

@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-ro
 import { authAPI } from './services/api';
 import Login from './components/Login';
 import TimesheetForm from './components/TimesheetForm';
+import EntriesPage from './components/EntriesPage';
 import ExportPage from './components/ExportPage';
+import UserManagement from './components/UserManagement';
 import './App.css';
 
 function App() {
@@ -61,10 +63,12 @@ function App() {
           </div>
           <div className="nav-links">
             <Link to="/">Home</Link>
+            <Link to="/entries">Entries</Link>
             <Link to="/export">Export</Link>
+            {user.role === 'admin' && <Link to="/users">Users</Link>}
           </div>
           <div className="nav-user">
-            <span>Welcome, {user.username}</span>
+            <span>Welcome, {user.username} ({user.role})</span>
             <button onClick={handleLogout} className="btn-logout">
               Logout
             </button>
@@ -73,8 +77,10 @@ function App() {
 
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<TimesheetForm />} />
-            <Route path="/export" element={<ExportPage />} />
+            <Route path="/" element={<TimesheetForm user={user} />} />
+            <Route path="/entries" element={<EntriesPage user={user} />} />
+            <Route path="/export" element={<ExportPage user={user} />} />
+            {user.role === 'admin' && <Route path="/users" element={<UserManagement />} />}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

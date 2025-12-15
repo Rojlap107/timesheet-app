@@ -30,8 +30,12 @@ export function initializeDatabase() {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           username TEXT UNIQUE NOT NULL,
           password_hash TEXT NOT NULL,
+          full_name TEXT,
           email TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          role TEXT DEFAULT 'program_manager' NOT NULL,
+          company_id INTEGER,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (company_id) REFERENCES companies(id)
         )
       `);
 
@@ -39,25 +43,22 @@ export function initializeDatabase() {
       db.run(`
         CREATE TABLE IF NOT EXISTS companies (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT UNIQUE NOT NULL
+          name TEXT UNIQUE NOT NULL,
+          abbreviation TEXT UNIQUE NOT NULL,
+          email TEXT,
+          email_enabled INTEGER DEFAULT 1
         )
       `);
 
-      // Create work_ids table
+      // Create crew_chiefs table (renamed from employees)
       db.run(`
-        CREATE TABLE IF NOT EXISTS work_ids (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          work_id TEXT UNIQUE NOT NULL,
-          description TEXT
-        )
-      `);
-
-      // Create employees table
-      db.run(`
-        CREATE TABLE IF NOT EXISTS employees (
+        CREATE TABLE IF NOT EXISTS crew_chiefs (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
-          employee_code TEXT UNIQUE
+          employee_code TEXT,
+          company_id INTEGER NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (company_id) REFERENCES companies(id)
         )
       `);
 
@@ -66,15 +67,17 @@ export function initializeDatabase() {
         CREATE TABLE IF NOT EXISTS timesheet_entries (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           unique_id TEXT UNIQUE NOT NULL,
+          job_id TEXT UNIQUE NOT NULL,
+          job_type TEXT NOT NULL,
           company_id INTEGER NOT NULL,
-          work_id INTEGER NOT NULL,
-          employee_id INTEGER NOT NULL,
+          crew_chief_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
           entry_date DATE NOT NULL,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (company_id) REFERENCES companies(id),
-          FOREIGN KEY (work_id) REFERENCES work_ids(id),
-          FOREIGN KEY (employee_id) REFERENCES employees(id)
+          FOREIGN KEY (crew_chief_id) REFERENCES crew_chiefs(id),
+          FOREIGN KEY (user_id) REFERENCES users(id)
         )
       `);
 
@@ -87,7 +90,13 @@ export function initializeDatabase() {
           time_out TEXT NOT NULL,
           FOREIGN KEY (timesheet_entry_id) REFERENCES timesheet_entries(id) ON DELETE CASCADE
         )
-      `, (err) => {
+      `);
+
+      // Create indexes for performance
+      db.run('CREATE INDEX IF NOT EXISTS idx_timesheet_user ON timesheet_entries(user_id)');
+      db.run('CREATE INDEX IF NOT EXISTS idx_timesheet_company ON timesheet_entries(company_id)');
+      db.run('CREATE INDEX IF NOT EXISTS idx_crew_chief_company ON crew_chiefs(company_id)');
+      db.run('CREATE INDEX IF NOT EXISTS idx_job_id ON timesheet_entries(job_id)', (err) => {
         if (err) {
           reject(err);
         } else {
@@ -119,57 +128,59 @@ export async function seedDatabase() {
         console.log('Seeding database with initial data...');
 
         db.serialize(async () => {
-          // Insert companies
+          // Insert companies with abbreviation and email settings
           const companies = [
-            'KS Construction',
-            'Alpine Builders',
-            'Mountain Works Inc',
-            'Summit Projects'
+            { name: 'Karma Staff', abbreviation: 'KS', email: 'timesheets@karmastaff.com', email_enabled: 1 },
+            { name: 'PuroClean San Clemente', abbreviation: 'SC', email: 'admin@purocleansanclemente.com', email_enabled: 1 },
+            { name: 'Alpine Builders', abbreviation: 'AB', email: 'notify@alpine.com', email_enabled: 0 },
+            { name: 'Mountain Works Inc', abbreviation: 'MW', email: null, email_enabled: 0 }
           ];
 
-          const insertCompany = db.prepare('INSERT INTO companies (name) VALUES (?)');
-          companies.forEach(company => insertCompany.run(company));
+          const insertCompany = db.prepare('INSERT INTO companies (name, abbreviation, email, email_enabled) VALUES (?, ?, ?, ?)');
+          companies.forEach(company => insertCompany.run(company.name, company.abbreviation, company.email, company.email_enabled));
           insertCompany.finalize();
 
-          // Insert work IDs
-          const workIds = [
-            { id: 'PRJ-001', desc: 'Main Project Phase 1' },
-            { id: 'PRJ-002', desc: 'Main Project Phase 2' },
-            { id: 'PRJ-003', desc: 'Main Project Phase 3' },
-            { id: 'MAINT-101', desc: 'Maintenance Work' },
-            { id: 'MAINT-102', desc: 'Emergency Repairs' }
+          // Insert crew chiefs with company associations
+          const crewChiefs = [
+            { name: 'John Martinez', code: 'CC001', company_id: 1 },
+            { name: 'Sarah Johnson', code: 'CC002', company_id: 1 },
+            { name: 'Mike Rodriguez', code: 'CC001', company_id: 2 },
+            { name: 'Emily Chen', code: 'CC002', company_id: 2 },
+            { name: 'David Kim', code: 'CC003', company_id: 2 },
+            { name: 'Lisa Anderson', code: 'CC001', company_id: 3 }
           ];
 
-          const insertWorkId = db.prepare('INSERT INTO work_ids (work_id, description) VALUES (?, ?)');
-          workIds.forEach(w => insertWorkId.run(w.id, w.desc));
-          insertWorkId.finalize();
-
-          // Insert employees
-          const employees = [
-            { name: 'John Doe', code: 'EMP001' },
-            { name: 'Jane Smith', code: 'EMP002' },
-            { name: 'Mike Johnson', code: 'EMP003' },
-            { name: 'Sarah Williams', code: 'EMP004' },
-            { name: 'David Brown', code: 'EMP005' }
-          ];
-
-          const insertEmployee = db.prepare('INSERT INTO employees (name, employee_code) VALUES (?, ?)');
-          employees.forEach(emp => insertEmployee.run(emp.name, emp.code));
-          insertEmployee.finalize();
+          const insertCrewChief = db.prepare('INSERT INTO crew_chiefs (name, employee_code, company_id) VALUES (?, ?, ?)');
+          crewChiefs.forEach(cc => insertCrewChief.run(cc.name, cc.code, cc.company_id));
+          insertCrewChief.finalize();
 
           // Create default admin user
-          const password = await bcrypt.hash('admin123', 10);
+          const adminPassword = await bcrypt.hash('admin123', 10);
           db.run(
-            'INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)',
-            ['admin', password, 'admin@timesheet.com'],
-            (err) => {
+            'INSERT INTO users (username, password_hash, full_name, email, role, company_id) VALUES (?, ?, ?, ?, ?, ?)',
+            ['admin', adminPassword, 'System Administrator', 'admin@karmastaff.com', 'admin', 1],
+            async (err) => {
               if (err) {
                 reject(err);
-              } else {
-                console.log('Database seeded successfully');
-                console.log('Default login - Username: admin, Password: admin123');
-                resolve();
+                return;
               }
+
+              // Create sample program manager user
+              const pmPassword = await bcrypt.hash('password123', 10);
+              db.run(
+                'INSERT INTO users (username, password_hash, full_name, email, role, company_id) VALUES (?, ?, ?, ?, ?, ?)',
+                ['pm_sanclemente', pmPassword, 'John Smith', 'pm@purocleansanclemente.com', 'program_manager', 2],
+                (err) => {
+                  if (err) {
+                    reject(err);
+                  } else {
+                    console.log('Database seeded successfully');
+                    console.log('Admin login - Username: admin, Password: admin123');
+                    console.log('Program Manager login - Username: pm_sanclemente, Password: password123');
+                    resolve();
+                  }
+                }
+              );
             }
           );
         });

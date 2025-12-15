@@ -27,11 +27,12 @@ export function generateExcelFile(timesheetEntries) {
   // Add header row
   rows.push([
     'Unique ID',
+    'Job ID',
     'Date',
     'Company',
-    'Work ID',
-    'Employee',
+    'Crew Chief',
     'Employee Code',
+    'Created By',
     'Time In',
     'Time Out',
     'Total Hours'
@@ -46,11 +47,12 @@ export function generateExcelFile(timesheetEntries) {
       entry.time_entries.forEach((timeEntry, index) => {
         rows.push([
           index === 0 ? entry.unique_id : '', // Only show unique_id on first row
+          index === 0 ? entry.job_id : '',
           index === 0 ? entry.entry_date : '',
           index === 0 ? entry.company_name : '',
-          index === 0 ? entry.work_id : '',
-          index === 0 ? entry.employee_name : '',
+          index === 0 ? entry.crew_chief_name : '',
           index === 0 ? entry.employee_code : '',
+          index === 0 ? entry.created_by : '',
           timeEntry.time_in,
           timeEntry.time_out,
           index === 0 ? totalHours : '' // Only show total on first row
@@ -60,11 +62,12 @@ export function generateExcelFile(timesheetEntries) {
       // Entry with no time entries
       rows.push([
         entry.unique_id,
+        entry.job_id,
         entry.entry_date,
         entry.company_name,
-        entry.work_id,
-        entry.employee_name,
+        entry.crew_chief_name,
         entry.employee_code,
+        entry.created_by,
         '',
         '',
         '0h 0m'
@@ -79,11 +82,12 @@ export function generateExcelFile(timesheetEntries) {
   // Set column widths
   worksheet['!cols'] = [
     { wch: 15 }, // Unique ID
+    { wch: 18 }, // Job ID
     { wch: 12 }, // Date
     { wch: 20 }, // Company
-    { wch: 12 }, // Work ID
-    { wch: 20 }, // Employee
+    { wch: 20 }, // Crew Chief
     { wch: 15 }, // Employee Code
+    { wch: 20 }, // Created By
     { wch: 10 }, // Time In
     { wch: 10 }, // Time Out
     { wch: 12 }  // Total Hours
