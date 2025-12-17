@@ -7,7 +7,8 @@ function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
-      <div className="admin-tabs">
+      {/* Desktop Tabs */}
+      <div className="admin-tabs desktop-only">
         <button 
           className={activeTab === 'users' ? 'active' : ''} 
           onClick={() => setActiveTab('users')}
@@ -39,6 +40,48 @@ function AdminDashboard() {
         {activeTab === 'companies' && <CompanyManagement />}
         {activeTab === 'crew' && <CrewManagement />}
         {activeTab === 'jobs' && <JobTypeManagement />}
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="mobile-bottom-nav">
+        <button 
+          className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            <path d="M20 18v-3h-2v3h-3v2h3v3h2v-3h3v-2z" fill="none"/>
+            <path d="M4 18v-3h2v3h3v2H6v3H4v-3H1v-2h3z"/> 
+          </svg>
+          <span>Users</span>
+        </button>
+        <button 
+          className={`nav-item ${activeTab === 'companies' ? 'active' : ''}`}
+          onClick={() => setActiveTab('companies')}
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
+          </svg>
+          <span>Companies</span>
+        </button>
+        <button 
+          className={`nav-item ${activeTab === 'crew' ? 'active' : ''}`}
+          onClick={() => setActiveTab('crew')}
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+          <span>Crew</span>
+        </button>
+        <button 
+          className={`nav-item ${activeTab === 'jobs' ? 'active' : ''}`}
+          onClick={() => setActiveTab('jobs')}
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+          <span>Jobs</span>
+        </button>
       </div>
     </div>
   );
@@ -95,7 +138,7 @@ function CompanyManagement() {
       <div className="section-header">
         <h3>Company Management</h3>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-          {showForm ? 'Cancel' : '+ Add Company'}
+          {showForm ? 'Cancel' : '+ New Company'}
         </button>
       </div>
 
@@ -129,7 +172,7 @@ function CompanyManagement() {
         </form>
       )}
 
-      <table className="admin-table">
+      <table className="admin-table desktop-only">
         <thead>
           <tr>
             <th>Name</th>
@@ -151,6 +194,26 @@ function CompanyManagement() {
           ))}
         </tbody>
       </table>
+
+      {/* Mobile Card View */}
+      <div className="mobile-list">
+        <h3 className="mobile-section-title">EXISTING COMPANIES</h3>
+        {companies.map(c => (
+          <div key={c.id} className="mobile-card">
+            <div className="mobile-card-header">
+              <h4>{c.name}</h4>
+            </div>
+            <div className="mobile-card-content">
+              <p>Abbreviation: {c.abbreviation}</p>
+              <p>Email: {c.email || '-'}</p>
+            </div>
+            <div className="mobile-card-actions">
+              <button className="btn-edit-sm">Edit</button>
+              <button onClick={() => handleDelete(c.id)} className="btn-delete-sm">Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -198,9 +261,9 @@ function JobTypeManagement() {
   return (
     <div className="management-section">
       <div className="section-header">
-        <h3>Job Type Management</h3>
+        <h3>Job Types</h3>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-          {showForm ? 'Cancel' : '+ Add Job Type'}
+          {showForm ? 'Cancel' : '+ New Job Type'}
         </button>
       </div>
 
@@ -218,7 +281,7 @@ function JobTypeManagement() {
         </form>
       )}
 
-      <table className="admin-table">
+      <table className="admin-table desktop-only">
         <thead>
           <tr>
             <th>Code</th>
@@ -238,6 +301,27 @@ function JobTypeManagement() {
           ))}
         </tbody>
       </table>
+
+      {/* Mobile Card View */}
+      <div className="mobile-list">
+        <h3 className="mobile-section-title">EXISTING JOB TYPES</h3>
+        {jobTypes.map(j => (
+          <div key={j.id || j.code} className="mobile-card">
+            <div className="mobile-card-header">
+              <h4>{j.name}</h4>
+            </div>
+            <div className="mobile-card-content">
+              <p>Code: {j.code}</p>
+            </div>
+            {j.id && (
+              <div className="mobile-card-actions">
+                <button className="btn-edit-sm">Edit</button>
+                <button onClick={() => handleDelete(j.id)} className="btn-delete-sm">Delete</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -290,9 +374,9 @@ function CrewManagement() {
   return (
     <div className="management-section">
       <div className="section-header">
-        <h3>Crew Chief Management</h3>
+        <h3>Crew Chiefs</h3>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-          {showForm ? 'Cancel' : '+ Add Crew Chief'}
+          {showForm ? 'Cancel' : '+ New Crew Chief'}
         </button>
       </div>
 
@@ -319,7 +403,7 @@ function CrewManagement() {
         </form>
       )}
 
-      <table className="admin-table">
+      <table className="admin-table desktop-only">
         <thead>
           <tr>
             <th>Name</th>
@@ -344,9 +428,32 @@ function CrewManagement() {
           })}
         </tbody>
       </table>
+
+      {/* Mobile Card View */}
+      <div className="mobile-list">
+        <h3 className="mobile-section-title">EXISTING CHIEFS</h3>
+        {crews.map(c => {
+          const company = companies.find(comp => comp.id === c.company_id);
+          return (
+            <div key={c.id} className="mobile-card">
+              <div className="mobile-card-header">
+                <h4>{c.name}</h4>
+              </div>
+              <div className="mobile-card-content">
+                <p>Code: {c.employee_code || '-'}</p>
+                <p>Company: {company ? company.name : '-'}</p>
+                <p className="created-at">created on 15/12/2025</p>
+              </div>
+              <div className="mobile-card-actions">
+                <button className="btn-edit-sm">Edit</button>
+                <button onClick={() => handleDelete(c.id)} className="btn-delete-sm">Delete</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 export default AdminDashboard;
-

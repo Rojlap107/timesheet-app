@@ -104,11 +104,11 @@ function UserManagement() {
 
   return (
     <div className="user-management">
-      <div className="page-header">
-        <h2>User Management</h2>
+      <div className="section-header">
+        <h3>User Management</h3>
         {!showForm && (
           <button onClick={() => setShowForm(true)} className="btn-primary">
-            + Create Program Manager
+            + Create New User
           </button>
         )}
       </div>
@@ -122,7 +122,7 @@ function UserManagement() {
       {showForm && (
         <div className="user-form-container">
           <h3>{editingUser ? 'Edit Program Manager' : 'Create New Program Manager'}</h3>
-          <form onSubmit={handleSubmit} className="user-form">
+          <form onSubmit={handleSubmit} className="admin-form">
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="username">Username *</label>
@@ -205,37 +205,66 @@ function UserManagement() {
       ) : users.length === 0 ? (
         <p>No program managers found</p>
       ) : (
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Company</th>
-              <th>Created</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          {/* Desktop Table */}
+          <table className="admin-table desktop-only">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.username}</td>
+                  <td>{user.full_name || '-'}</td>
+                  <td>{user.email || '-'}</td>
+                  <td>{user.company_name} ({user.company_abbr})</td>
+                  <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                  <td>
+                    <button onClick={() => handleEdit(user)} className="btn-edit">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(user.id)} className="btn-delete">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Mobile Card View */}
+          <div className="mobile-list">
+            <h3 className="mobile-section-title">EXISTING USERS</h3>
             {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.username}</td>
-                <td>{user.full_name || '-'}</td>
-                <td>{user.email || '-'}</td>
-                <td>{user.company_name} ({user.company_abbr})</td>
-                <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                <td>
-                  <button onClick={() => handleEdit(user)} className="btn-edit">
+              <div key={user.id} className="mobile-card">
+                <div className="mobile-card-header">
+                  <h4>{user.full_name || user.username}</h4>
+                </div>
+                <div className="mobile-card-content">
+                  <p>username: {user.username}</p>
+                  <p>Email: {user.email || '-'}</p>
+                  <p>Company: {user.company_name} ({user.company_abbr})</p>
+                  <p className="created-at">created on {new Date(user.created_at).toLocaleDateString()}</p>
+                </div>
+                <div className="mobile-card-actions">
+                  <button onClick={() => handleEdit(user)} className="btn-edit-sm">
                     Edit
                   </button>
-                  <button onClick={() => handleDelete(user.id)} className="btn-delete">
+                  <button onClick={() => handleDelete(user.id)} className="btn-delete-sm">
                     Delete
                   </button>
-                </td>
-              </tr>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
     </div>
   );
