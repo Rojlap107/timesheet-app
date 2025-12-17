@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../config/database.js';
-import { requireAuth, attachUserRole } from '../middleware/auth.js';
+import { requireAuth, attachUserRole, requireAdmin } from '../middleware/auth.js';
 import { sendTimesheetEmail } from '../utils/email.js';
 
 const router = express.Router();
@@ -39,16 +39,73 @@ router.get('/companies', requireAuth, (req, res) => {
   });
 });
 
-// Get all job types (static list)
+// Get all job types
 router.get('/job-types', requireAuth, (req, res) => {
-  res.json([
-    { code: 'CON', name: 'Content' },
-    { code: 'WTR', name: 'Water' },
-    { code: 'MLD', name: 'Mold' },
-    { code: 'STC', name: 'Structured Cleaning' },
-    { code: 'TRM', name: 'Trauma' },
-    { code: 'TMP', name: 'Temporary Services' }
-  ]);
+  db.all('SELECT * FROM job_types ORDER BY name', (err, rows) => {
+    if (err) {
+      console.error('Database error:', err);
+      // Fallback to static list if table is empty or error (during migration)
+      return res.json([
+        { code: 'CON', name: 'Content' },
+        { code: 'WTR', name: 'Water' },
+        { code: 'MLD', name: 'Mold' },
+        { code: 'STC', name: 'Structured Cleaning' },
+        { code: 'TRM', name: 'Trauma' },
+        { code: 'TMP', name: 'Temporary Services' }
+      ]);
+    }
+    res.json(rows);
+  });
+});
+
+// Admin: Create job type
+router.post('/job-types', requireAuth, requireAdmin, (req, res) => {
+  const { code, name, description } = req.body;
+  if (!code || !name) {
+    return res.status(400).json({ error: 'Code and name are required' });
+  }
+  db.run('INSERT INTO job_types (code, name, description) VALUES (?, ?, ?)', [code.toUpperCase(), name, description], function(err) {
+    if (err) return res.status(500).json({ error: 'Database error or duplicate code' });
+    res.status(201).json({ id: this.lastID, code, name });
+  });
+});
+
+// Admin: Delete job type
+router.delete('/job-types/:id', requireAuth, requireAdmin, (req, res) => {
+  db.run('DELETE FROM job_types WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json({ message: 'Job type deleted' });
+  });
+});
+
+// Admin: Create company
+router.post('/companies', requireAuth, requireAdmin, (req, res) => {
+  const { name, abbreviation, email, email_enabled } = req.body;
+  if (!name || !abbreviation) return res.status(400).json({ error: 'Name and abbreviation required' });
+  
+  db.run('INSERT INTO companies (name, abbreviation, email, email_enabled) VALUES (?, ?, ?, ?)', 
+    [name, abbreviation, email, email_enabled ? 1 : 0], 
+    function(err) {
+      if (err) return res.status(500).json({ error: 'Database error or duplicate' });
+      res.status(201).json({ id: this.lastID, message: 'Company created' });
+    }
+  );
+});
+
+// Admin: Delete company
+router.delete('/companies/:id', requireAuth, requireAdmin, (req, res) => {
+  db.run('DELETE FROM companies WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json({ message: 'Company deleted' });
+  });
+});
+
+// Admin: Delete crew chief
+router.delete('/crew-chiefs/:id', requireAuth, requireAdmin, (req, res) => {
+  db.run('DELETE FROM crew_chiefs WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json({ message: 'Crew chief deleted' });
+  });
 });
 
 // Get crew chiefs (optionally filtered by company)

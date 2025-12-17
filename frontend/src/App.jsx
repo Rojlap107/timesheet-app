@@ -5,12 +5,13 @@ import Login from './components/Login';
 import TimesheetForm from './components/TimesheetForm';
 import EntriesPage from './components/EntriesPage';
 import ExportPage from './components/ExportPage';
-import UserManagement from './components/UserManagement';
+import AdminDashboard from './components/AdminDashboard';
 import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -37,11 +38,16 @@ function App() {
     try {
       await authAPI.logout();
       setUser(null);
+      setIsMenuOpen(false);
       // Force redirect to home page and clear history
       window.location.href = '/';
     } catch (error) {
       console.error('Logout failed:', error);
     }
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   if (loading) {
@@ -64,17 +70,24 @@ function App() {
             <img src="/karmastaff logo.png" alt="Karma Staff Logo" className="nav-logo" />
             <h1>Timesheet System</h1>
           </div>
-          <div className="nav-links">
-            <Link to="/">Home</Link>
-            <Link to="/entries">Entries</Link>
-            <Link to="/export">Export</Link>
-            {user.role === 'admin' && <Link to="/users">Users</Link>}
-          </div>
-          <div className="nav-user">
-            <span>Welcome, {user.username} ({user.role})</span>
-            <button onClick={handleLogout} className="btn-logout">
-              Logout
-            </button>
+          
+          <button className="hamburger-menu" onClick={toggleMenu}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <div className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
+            <Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
+            <Link to="/entries" onClick={() => setIsMenuOpen(false)}>Entries</Link>
+            <Link to="/export" onClick={() => setIsMenuOpen(false)}>Export</Link>
+            {user.role === 'admin' && (
+              <Link to="/admin" onClick={() => setIsMenuOpen(false)}>Admin Dashboard</Link>
+            )}
+            <div className="nav-user-mobile">
+              <span>{user.username} ({user.role})</span>
+              <button onClick={handleLogout} className="btn-logout">Logout</button>
+            </div>
           </div>
         </nav>
 
@@ -83,7 +96,7 @@ function App() {
             <Route path="/" element={<TimesheetForm user={user} />} />
             <Route path="/entries" element={<EntriesPage user={user} />} />
             <Route path="/export" element={<ExportPage user={user} />} />
-            {user.role === 'admin' && <Route path="/users" element={<UserManagement />} />}
+            {user.role === 'admin' && <Route path="/admin" element={<AdminDashboard />} />}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

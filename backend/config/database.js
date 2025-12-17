@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import dotenv from 'dotenv';
 
-dotenv.config(); 
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -50,6 +50,16 @@ export function initializeDatabase() {
           abbreviation TEXT UNIQUE NOT NULL,
           email TEXT,
           email_enabled INTEGER DEFAULT 1
+        )
+      `);
+
+      // Create job_types table
+      db.run(`
+        CREATE TABLE IF NOT EXISTS job_types (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          code TEXT UNIQUE NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT
         )
       `);
 
@@ -122,75 +132,104 @@ export async function seedDatabase() {
           return;
         }
 
-        if (row.count > 0) {
-          console.log('Database already seeded');
-          resolve();
-          return;
-        }
+        const companiesExist = row.count > 0;
 
-        console.log('Seeding database with initial data...');
+        // Check if job_types exist
+        db.get('SELECT COUNT(*) as count FROM job_types', async (err, row) => {
+           const jobTypesExist = !err && row && row.count > 0;
+           
+           if (companiesExist && jobTypesExist) {
+             console.log('Database already seeded');
+             resolve();
+             return;
+           }
 
-        db.serialize(async () => {
-          // Insert companies with abbreviation and email settings
-          const companies = [
-            { name: 'Karma Staff', abbreviation: 'KS', email: 'timesheets@karmastaff.com', email_enabled: 1 },
-            { name: 'PuroClean San Clemente', abbreviation: 'SC', email: 'admin@purocleansanclemente.com', email_enabled: 1 },
-            { name: 'Alpine Builders', abbreviation: 'AB', email: 'notify@alpine.com', email_enabled: 0 },
-            { name: 'Mountain Works Inc', abbreviation: 'MW', email: null, email_enabled: 0 }
-          ];
+           console.log('Seeding database...');
+           
+           db.serialize(async () => {
+             if (!companiesExist) {
+                // Insert companies with abbreviation and email settings
+                const companies = [
+                  { name: 'Karma Staff', abbreviation: 'KS', email: 'timesheets@karmastaff.com', email_enabled: 1 },
+                  { name: 'PuroClean San Clemente', abbreviation: 'SC', email: 'admin@purocleansanclemente.com', email_enabled: 1 },
+                  { name: 'Alpine Builders', abbreviation: 'AB', email: 'notify@alpine.com', email_enabled: 0 },
+                  { name: 'Mountain Works Inc', abbreviation: 'MW', email: null, email_enabled: 0 }
+                ];
 
-          const insertCompany = db.prepare('INSERT INTO companies (name, abbreviation, email, email_enabled) VALUES (?, ?, ?, ?)');
-          companies.forEach(company => insertCompany.run(company.name, company.abbreviation, company.email, company.email_enabled));
-          insertCompany.finalize();
+                const insertCompany = db.prepare('INSERT INTO companies (name, abbreviation, email, email_enabled) VALUES (?, ?, ?, ?)');
+                companies.forEach(company => insertCompany.run(company.name, company.abbreviation, company.email, company.email_enabled));
+                insertCompany.finalize();
+             }
 
-          // Insert crew chiefs with company associations
-          const crewChiefs = [
-            { name: 'John Martinez', code: 'CC001', company_id: 1 },
-            { name: 'Sarah Johnson', code: 'CC002', company_id: 1 },
-            { name: 'Mike Rodriguez', code: 'CC001', company_id: 2 },
-            { name: 'Emily Chen', code: 'CC002', company_id: 2 },
-            { name: 'David Kim', code: 'CC003', company_id: 2 },
-            { name: 'Lisa Anderson', code: 'CC001', company_id: 3 }
-          ];
+             if (!jobTypesExist) {
+                // Insert job types
+                const jobTypes = [
+                  { code: 'CON', name: 'Content' },
+                  { code: 'WTR', name: 'Water' },
+                  { code: 'MLD', name: 'Mold' },
+                  { code: 'STC', name: 'Structured Cleaning' },
+                  { code: 'TRM', name: 'Trauma' },
+                  { code: 'TMP', name: 'Temporary Services' }
+                ];
 
-          const insertCrewChief = db.prepare('INSERT INTO crew_chiefs (name, employee_code, company_id) VALUES (?, ?, ?)');
-          crewChiefs.forEach(cc => insertCrewChief.run(cc.name, cc.code, cc.company_id));
-          insertCrewChief.finalize();
+                const insertJobType = db.prepare('INSERT OR IGNORE INTO job_types (code, name) VALUES (?, ?)');
+                jobTypes.forEach(jt => insertJobType.run(jt.code, jt.name));
+                insertJobType.finalize();
+             }
 
-          // Create default admin user
-          const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-          const adminPasswordRaw = process.env.ADMIN_PASSWORD || 'admin123';
-          const adminPassword = await bcrypt.hash(adminPasswordRaw, 10);
-          
-          db.run(
-            'INSERT INTO users (username, password_hash, full_name, email, role, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-            [adminUsername, adminPassword, 'System Administrator', 'admin@karmastaff.com', 'admin', 1],
-            async (err) => {
-              if (err) {
-                reject(err);
-                return;
-              }
+             if (!companiesExist) {
+                // Insert crew chiefs with company associations
+                const crewChiefs = [
+                  { name: 'John Martinez', code: 'CC001', company_id: 1 },
+                  { name: 'Sarah Johnson', code: 'CC002', company_id: 1 },
+                  { name: 'Mike Rodriguez', code: 'CC001', company_id: 2 },
+                  { name: 'Emily Chen', code: 'CC002', company_id: 2 },
+                  { name: 'David Kim', code: 'CC003', company_id: 2 },
+                  { name: 'Lisa Anderson', code: 'CC001', company_id: 3 }
+                ];
 
-              // Create sample program manager user
-              const pmUsername = process.env.PM_USERNAME || 'pm_sanclemente';
-              const pmPasswordRaw = process.env.PM_PASSWORD || 'password123';
-              const pmPassword = await bcrypt.hash(pmPasswordRaw, 10);
+                const insertCrewChief = db.prepare('INSERT INTO crew_chiefs (name, employee_code, company_id) VALUES (?, ?, ?)');
+                crewChiefs.forEach(cc => insertCrewChief.run(cc.name, cc.code, cc.company_id));
+                insertCrewChief.finalize();
 
-              db.run(
-                'INSERT INTO users (username, password_hash, full_name, email, role, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-                [pmUsername, pmPassword, 'John Smith', 'pm@purocleansanclemente.com', 'program_manager', 2],
-                (err) => {
-                  if (err) {
-                    reject(err);
-                  } else {
-                    console.log('Database seeded successfully');
-                    console.log('Initial users created (credentials hidden)');
-                    resolve();
+                // Create default admin user
+                const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+                const adminPasswordRaw = process.env.ADMIN_PASSWORD || 'admin123';
+                const adminPassword = await bcrypt.hash(adminPasswordRaw, 10);
+                
+                db.run(
+                  'INSERT INTO users (username, password_hash, full_name, email, role, company_id) VALUES (?, ?, ?, ?, ?, ?)',
+                  [adminUsername, adminPassword, 'System Administrator', 'admin@karmastaff.com', 'admin', 1],
+                  async (err) => {
+                    if (err) {
+                      reject(err);
+                      return;
+                    }
+
+                    // Create sample program manager user
+                    const pmUsername = process.env.PM_USERNAME || 'pm_sanclemente';
+                    const pmPasswordRaw = process.env.PM_PASSWORD || 'password123';
+                    const pmPassword = await bcrypt.hash(pmPasswordRaw, 10);
+
+                    db.run(
+                      'INSERT INTO users (username, password_hash, full_name, email, role, company_id) VALUES (?, ?, ?, ?, ?, ?)',
+                      [pmUsername, pmPassword, 'John Smith', 'pm@purocleansanclemente.com', 'program_manager', 2],
+                      (err) => {
+                        if (err) {
+                          reject(err);
+                        } else {
+                          console.log('Database seeded successfully');
+                          console.log('Initial users created (credentials hidden)');
+                          resolve();
+                        }
+                      }
+                    );
                   }
-                }
-              );
-            }
-          );
+                );
+             } else {
+               resolve();
+             }
+           });
         });
       });
     } catch (error) {

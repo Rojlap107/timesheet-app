@@ -43,14 +43,29 @@ export const timesheetAPI = {
   getCompanies: () =>
     api.get('/timesheet/companies'),
 
+  createCompany: (data) =>
+    api.post('/timesheet/companies', data),
+
+  deleteCompany: (id) =>
+    api.delete(`/timesheet/companies/${id}`),
+
   getJobTypes: () =>
     api.get('/timesheet/job-types'),
+
+  createJobType: (data) =>
+    api.post('/timesheet/job-types', data),
+
+  deleteJobType: (id) =>
+    api.delete(`/timesheet/job-types/${id}`),
 
   getCrewChiefs: (companyId = null) =>
     api.get('/timesheet/crew-chiefs', companyId ? { params: { company_id: companyId } } : {}),
 
   createCrewChief: (data) =>
     api.post('/timesheet/crew-chiefs', data),
+
+  deleteCrewChief: (id) =>
+    api.delete(`/timesheet/crew-chiefs/${id}`),
 
   getEntries: (params = {}) =>
     api.get('/timesheet/entries', { params }),
