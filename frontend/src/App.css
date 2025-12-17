@@ -16,6 +16,18 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
 .nav-brand h1 {
   font-size: 1.5rem;
   margin: 0;
@@ -82,6 +94,19 @@
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   width: 100%;
   max-width: 400px;
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.login-logo {
+  max-width: 200px;
+  height: auto;
+  margin-bottom: 1rem;
 }
 
 .login-box h1 {

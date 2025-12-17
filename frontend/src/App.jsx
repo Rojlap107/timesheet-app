@@ -37,6 +37,8 @@ function App() {
     try {
       await authAPI.logout();
       setUser(null);
+      // Force redirect to home page and clear history
+      window.location.href = '/';
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -59,6 +61,7 @@ function App() {
       <div className="app">
         <nav className="navbar">
           <div className="nav-brand">
+            <img src="/karmastaff logo.png" alt="Karma Staff Logo" className="nav-logo" />
             <h1>Timesheet System</h1>
           </div>
           <div className="nav-links">

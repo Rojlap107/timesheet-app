@@ -27,7 +27,10 @@ function Login({ onLoginSuccess }) {
   return (
     <div className="login-container">
       <div className="login-box">
-        <h1>Timesheet Management System</h1>
+        <div className="login-header">
+          <img src="/karmastaff logo.png" alt="Karma Staff Logo" className="login-logo" />
+          <h1>Timesheet Management System</h1>
+        </div>
         <h2>Login</h2>
 
         <form onSubmit={handleSubmit}>
@@ -60,10 +63,6 @@ function Login({ onLoginSuccess }) {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-
-        <div className="login-hint">
-          <p>Default credentials: admin / admin123</p>
-        </div>
       </div>
     </div>
   );
