@@ -183,80 +183,8 @@
   width: auto;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .hamburger-menu {
-    display: flex;
-  }
-
-  .nav-links {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    height: auto;
-    width: 250px;
-    background-color: white;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1rem;
-    gap: 1rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transform: translateX(100%); /* Hidden by default */
-    transition: transform 0.3s ease-in-out;
-    opacity: 0;
-    pointer-events: none;
-    border-radius: 0 0 0 8px;
-  }
-
-  .nav-links.open {
-    transform: translateX(0);
-    opacity: 1;
-    pointer-events: all;
-  }
-
-  .nav-links a {
-    width: 100%;
-    padding: 0.5rem;
-    border-radius: 4px;
-  }
-  
-  .nav-links a:hover {
-    background-color: #f1f2f6;
-  }
-
-  .nav-user {
-    display: none; /* Hide desktop user info */
-  }
-
-  .nav-user-mobile {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
-    margin-top: 0.5rem;
-  }
-  
-  .nav-user-mobile span {
-    font-size: 0.9rem;
-    color: #7f8c8d;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .time-entry-inputs {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .admin-table {
-    display: block;
-    overflow-x: auto;
-  }
-}
+/* Main Content */
+.main-content {
   flex: 1;
   padding: 2rem;
   max-width: 1400px;
@@ -641,6 +569,11 @@
   display: table;
 }
 
+/* Mobile Bottom Navigation */
+.mobile-bottom-nav {
+  display: none;
+}
+
 @media (max-width: 768px) {
   /* Removed old navbar responsive styles */
   
@@ -742,5 +675,159 @@
 
   .entries-table {
     display: none; /* Fallback */
+  }
+
+  /* Admin Dashboard Mobile */
+  .admin-dashboard {
+    min-height: calc(100vh - 64px); /* Full screen minus navbar height */
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 80px; /* Space for bottom nav */
+  }
+
+  .admin-content {
+    flex: 1;
+    padding: 1rem;
+  }
+
+  .admin-tabs.desktop-only {
+    display: none;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border-top: 1px solid #ddd;
+    padding: 0.5rem 0;
+    z-index: 1000;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+  }
+
+  .nav-item {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: #7f8c8d;
+    font-size: 0.75rem;
+    padding: 0.5rem;
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .nav-item.active {
+    color: #3498db;
+  }
+
+  .nav-item svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Adjustments for Mobile Cards in Admin */
+  .management-section {
+    padding-top: 0;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .section-header .btn-primary {
+    width: auto;
+    background-color: #1a2634; /* Darker button as per image */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .mobile-section-title {
+    font-size: 0.9rem;
+    color: #000;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+  }
+
+  .mobile-card {
+    background: white;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1rem; /* Breathing space between cards */
+    border-radius: 8px; /* Slight rounding if not already */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Shadow for card effect */
+  }
+
+  .mobile-card:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .mobile-card-header h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #000;
+  }
+
+  .mobile-card-content p {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.9rem;
+    color: #333;
+  }
+
+  .mobile-card-content .created-at {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    font-style: italic;
+    margin-top: 0.25rem;
+  }
+
+  .mobile-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  /* Override specific button styles for mobile admin cards to match image */
+  .mobile-card-actions .btn-edit-sm, 
+  .mobile-card-actions .btn-delete-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  
+  .mobile-card-actions .btn-edit-sm {
+    background-color: #ff7f27; /* Orange */
+    visibility: visible !important; /* Ensure visible */
+  }
+  
+  .mobile-card-actions .btn-delete-sm {
+    background-color: #ff3b30; /* Red */
   }
 }
