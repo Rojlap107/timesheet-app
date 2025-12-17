@@ -82,39 +82,69 @@ function EntriesPage({ user }) {
       ) : entries.length === 0 ? (
         <p>No entries found</p>
       ) : (
-        <table className="entries-table">
-          <thead>
-            <tr>
-              <th>Job ID</th>
-              <th>Date</th>
-              <th>Company</th>
-              <th>Crew Chief</th>
-              <th>Total Hours</th>
-              {user.role === 'admin' && <th>Created By</th>}
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((entry) => (
-              <tr key={entry.id}>
-                <td>{entry.job_id}</td>
-                <td>{entry.entry_date}</td>
-                <td>{entry.company_name}</td>
-                <td>{entry.crew_chief_name}</td>
-                <td>{calculateTotalHours(entry.time_entries)}</td>
-                {user.role === 'admin' && <td>{entry.created_by}</td>}
-                <td>
-                  <button onClick={() => handleEdit(entry)} className="btn-edit">
-                    Edit
-                  </button>
-                  <button onClick={() => handleDelete(entry.id)} className="btn-delete">
-                    Delete
-                  </button>
-                </td>
+        <div className="entries-container">
+          {/* Desktop Table */}
+          <table className="entries-table desktop-only">
+            <thead>
+              <tr>
+                <th>Job ID</th>
+                <th>Date</th>
+                <th>Company</th>
+                <th>Crew Chief</th>
+                <th>Total Hours</th>
+                {user.role === 'admin' && <th>Created By</th>}
+                <th>Actions</th>
               </tr>
+            </thead>
+            <tbody>
+              {entries.map((entry) => (
+                <tr key={entry.id}>
+                  <td>{entry.job_id}</td>
+                  <td>{entry.entry_date}</td>
+                  <td>{entry.company_name}</td>
+                  <td>{entry.crew_chief_name}</td>
+                  <td>{calculateTotalHours(entry.time_entries)}</td>
+                  {user.role === 'admin' && <td>{entry.created_by}</td>}
+                  <td>
+                    <button onClick={() => handleEdit(entry)} className="btn-edit">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(entry.id)} className="btn-delete">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Mobile Card View */}
+          <div className="mobile-entries-list">
+            {entries.map((entry) => (
+              <div key={entry.id} className="entry-card">
+                <div className="entry-card-header">
+                  <h3>{entry.job_id}</h3>
+                  <div className="entry-card-actions">
+                    <button onClick={() => handleEdit(entry)} className="btn-edit-sm">Edit</button>
+                    <button onClick={() => handleDelete(entry.id)} className="btn-delete-sm">Delete</button>
+                  </div>
+                </div>
+                <div className="entry-card-meta">
+                  created on {entry.entry_date}
+                </div>
+                <div className="entry-card-details">
+                  <span className="crew-name">{entry.crew_chief_name}</span>
+                  <span className="total-hours">{calculateTotalHours(entry.time_entries)}</span>
+                </div>
+                {user.role === 'admin' && (
+                  <div className="entry-card-footer">
+                    created by: {entry.created_by}
+                  </div>
+                )}
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
       )}
 
       {editingEntry && (
