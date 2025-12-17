@@ -378,6 +378,34 @@
   margin-bottom: 3rem;
 }
 
+.job-id-preview {
+  background-color: #f1f2f6;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  margin: 2rem 0;
+  border: 2px dashed #cbd5e0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.job-id-preview strong {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.job-id-preview span {
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #3498db;
+}
+
 /* Time Entries */
 .time-entries-section {
   margin: 2rem 0;
@@ -571,6 +599,11 @@
 
 /* Mobile Bottom Navigation */
 .mobile-bottom-nav {
+  display: none;
+}
+
+/* Mobile List View (Hidden on Desktop) */
+.mobile-list {
   display: none;
 }
 

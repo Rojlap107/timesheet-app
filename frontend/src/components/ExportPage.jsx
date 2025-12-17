@@ -158,7 +158,6 @@ function ExportPage() {
               {previewEntries.map((entry) => (
                 <div key={entry.id} className="entry-card">
                   <div className="entry-card-header">
-                    <h3>{entry.job_id}</h3>
                     <span className="entry-id-badge" style={{ fontSize: '0.8rem', color: '#888' }}>{entry.unique_id}</span>
                   </div>
                   <div className="entry-card-meta">

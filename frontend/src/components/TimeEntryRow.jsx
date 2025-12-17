@@ -1,8 +1,6 @@
 function TimeEntryRow({ timeEntry, index, onChange, onRemove }) {
   return (
     <div className="time-entry-row">
-      <div className="time-entry-number">#{index + 1}</div>
-
       <div className="time-entry-inputs">
         <div className="form-group">
           <label>Time In</label>

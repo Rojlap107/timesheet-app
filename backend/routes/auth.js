@@ -1,8 +1,10 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { db } from '../config/database.js';
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'timesheet-secret-key-change-in-production';
 
 // Login
 router.post('/login', (req, res) => {
@@ -25,14 +27,28 @@ router.post('/login', (req, res) => {
       const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
       if (passwordMatch) {
+        // Set session (for desktop/browser that supports cookies)
         req.session.userId = user.id;
         req.session.username = user.username;
         req.session.fullName = user.full_name;
         req.session.role = user.role;
         req.session.companyId = user.company_id;
 
+        // Generate JWT (for mobile/cross-domain)
+        const token = jwt.sign(
+          { 
+            userId: user.id, 
+            username: user.username, 
+            role: user.role, 
+            companyId: user.company_id 
+          },
+          JWT_SECRET,
+          { expiresIn: '30d' }
+        );
+
         res.json({
           message: 'Login successful',
+          token,
           user: {
             id: user.id,
             username: user.username,
@@ -63,8 +79,9 @@ router.post('/logout', (req, res) => {
 
 // Check authentication status
 router.get('/check', (req, res) => {
+  // Check Session
   if (req.session && req.session.userId) {
-    res.json({
+    return res.json({
       authenticated: true,
       user: {
         id: req.session.userId,
@@ -73,6 +90,27 @@ router.get('/check', (req, res) => {
         role: req.session.role,
         company_id: req.session.companyId
       }
+    });
+  } 
+  
+  // Check JWT Header (manual check for this endpoint if session missing)
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (err) {
+        return res.json({ authenticated: false });
+      }
+      return res.json({
+        authenticated: true,
+        user: {
+          id: user.userId,
+          username: user.username,
+          role: user.role,
+          company_id: user.companyId
+          // full_name missing in JWT payload above, added to login but here extracted from token
+        }
+      });
     });
   } else {
     res.json({ authenticated: false });

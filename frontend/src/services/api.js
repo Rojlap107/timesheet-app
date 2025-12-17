@@ -11,13 +11,37 @@ const api = axios.create({
   }
 });
 
+// Request interceptor to add JWT token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Authentication APIs
 export const authAPI = {
-  login: (username, password) =>
-    api.post('/auth/login', { username, password }),
+  login: async (username, password) => {
+    const response = await api.post('/auth/login', { username, password });
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
+    return response;
+  },
 
-  logout: () =>
-    api.post('/auth/logout'),
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      localStorage.removeItem('token');
+    }
+  },
 
   checkAuth: () =>
     api.get('/auth/check')
