@@ -84,6 +84,12 @@ function App() {
             {user.role === 'admin' && (
               <Link to="/admin" onClick={() => setIsMenuOpen(false)}>Admin Dashboard</Link>
             )}
+            
+            <div className="nav-user">
+              <span>{user.username} ({user.role})</span>
+              <button onClick={handleLogout} className="btn-logout">Logout</button>
+            </div>
+
             <div className="nav-user-mobile">
               <span>{user.username} ({user.role})</span>
               <button onClick={handleLogout} className="btn-logout">Logout</button>
