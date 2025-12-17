@@ -2,6 +2,9 @@ import sqlite3 from 'sqlite3';
 import bcrypt from 'bcrypt';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -104,10 +107,13 @@ db.serialize(() => {
     insertEmployee.finalize();
 
     // Insert admin user
-    const password = await bcrypt.hash('admin123', 10);
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminPasswordRaw = process.env.ADMIN_PASSWORD || 'admin123';
+    const password = await bcrypt.hash(adminPasswordRaw, 10);
+    
     db.run(
       'INSERT OR IGNORE INTO users (username, password_hash, email) VALUES (?, ?, ?)',
-      ['admin', password, 'admin@timesheet.com'],
+      [adminUsername, password, 'admin@timesheet.com'],
       (err) => {
         if (err) {
           console.error('Error creating admin user:', err);
@@ -115,9 +121,7 @@ db.serialize(() => {
           console.log('\n=================================');
           console.log('Database setup complete!');
           console.log('=================================');
-          console.log('Default login credentials:');
-          console.log('Username: admin');
-          console.log('Password: admin123');
+          console.log('Default login credentials created (check .env)');
           console.log('=================================\n');
         }
 

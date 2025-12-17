@@ -20,10 +20,8 @@ async function initDB() {
     console.log('✓ Data seeded successfully');
 
     console.log('\n✓ Database initialization complete!');
-    console.log('\nTest accounts:');
-    console.log('- Admin: username=admin, password=admin123');
-    console.log('- PM: username=pm_sanclemente, password=password123');
-
+    console.log('\nCheck .env file for credentials if configured, otherwise using defaults.');
+    
     db.close((err) => {
       if (err) {
         console.error('Error closing database:', err);

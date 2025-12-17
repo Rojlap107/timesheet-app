@@ -2,6 +2,9 @@ import sqlite3 from 'sqlite3';
 import bcrypt from 'bcrypt';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -155,10 +158,13 @@ export async function seedDatabase() {
           insertCrewChief.finalize();
 
           // Create default admin user
-          const adminPassword = await bcrypt.hash('admin123', 10);
+          const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+          const adminPasswordRaw = process.env.ADMIN_PASSWORD || 'admin123';
+          const adminPassword = await bcrypt.hash(adminPasswordRaw, 10);
+          
           db.run(
             'INSERT INTO users (username, password_hash, full_name, email, role, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-            ['admin', adminPassword, 'System Administrator', 'admin@karmastaff.com', 'admin', 1],
+            [adminUsername, adminPassword, 'System Administrator', 'admin@karmastaff.com', 'admin', 1],
             async (err) => {
               if (err) {
                 reject(err);
@@ -166,17 +172,19 @@ export async function seedDatabase() {
               }
 
               // Create sample program manager user
-              const pmPassword = await bcrypt.hash('password123', 10);
+              const pmUsername = process.env.PM_USERNAME || 'pm_sanclemente';
+              const pmPasswordRaw = process.env.PM_PASSWORD || 'password123';
+              const pmPassword = await bcrypt.hash(pmPasswordRaw, 10);
+
               db.run(
                 'INSERT INTO users (username, password_hash, full_name, email, role, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-                ['pm_sanclemente', pmPassword, 'John Smith', 'pm@purocleansanclemente.com', 'program_manager', 2],
+                [pmUsername, pmPassword, 'John Smith', 'pm@purocleansanclemente.com', 'program_manager', 2],
                 (err) => {
                   if (err) {
                     reject(err);
                   } else {
                     console.log('Database seeded successfully');
-                    console.log('Admin login - Username: admin, Password: admin123');
-                    console.log('Program Manager login - Username: pm_sanclemente, Password: password123');
+                    console.log('Initial users created (credentials hidden)');
                     resolve();
                   }
                 }
