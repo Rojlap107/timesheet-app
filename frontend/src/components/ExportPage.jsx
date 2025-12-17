@@ -118,38 +118,71 @@ function ExportPage() {
         {previewEntries.length === 0 ? (
           <p>No entries found for the selected date range</p>
         ) : (
-          <table className="entries-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Company</th>
-                <th>Job ID</th>
-                <th>Crew Chief</th>
-                <th>Time Entries</th>
-                <th>Total Hours</th>
-              </tr>
-            </thead>
-            <tbody>
-              {previewEntries.map((entry) => (
-                <tr key={entry.id}>
-                  <td>{entry.unique_id}</td>
-                  <td>{entry.entry_date}</td>
-                  <td>{entry.company_name}</td>
-                  <td>{entry.job_id}</td>
-                  <td>{entry.crew_chief_name}</td>
-                  <td>
-                    {entry.time_entries?.map((te, idx) => (
-                      <div key={idx}>
-                        {te.time_in} - {te.time_out}
-                      </div>
-                    ))}
-                  </td>
-                  <td>{calculateTotalHours(entry.time_entries)}</td>
+          <div className="entries-container">
+            {/* Desktop Table */}
+            <table className="entries-table desktop-only">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Date</th>
+                  <th>Company</th>
+                  <th>Job ID</th>
+                  <th>Crew Chief</th>
+                  <th>Time Entries</th>
+                  <th>Total Hours</th>
                 </tr>
+              </thead>
+              <tbody>
+                {previewEntries.map((entry) => (
+                  <tr key={entry.id}>
+                    <td>{entry.unique_id}</td>
+                    <td>{entry.entry_date}</td>
+                    <td>{entry.company_name}</td>
+                    <td>{entry.job_id}</td>
+                    <td>{entry.crew_chief_name}</td>
+                    <td>
+                      {entry.time_entries?.map((te, idx) => (
+                        <div key={idx}>
+                          {te.time_in} - {te.time_out}
+                        </div>
+                      ))}
+                    </td>
+                    <td>{calculateTotalHours(entry.time_entries)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Mobile Card View */}
+            <div className="mobile-entries-list">
+              {previewEntries.map((entry) => (
+                <div key={entry.id} className="entry-card">
+                  <div className="entry-card-header">
+                    <h3>{entry.job_id}</h3>
+                    <span className="entry-id-badge" style={{ fontSize: '0.8rem', color: '#888' }}>{entry.unique_id}</span>
+                  </div>
+                  <div className="entry-card-meta">
+                    created on {entry.entry_date}
+                  </div>
+                  <div className="entry-card-details">
+                    <span className="crew-name">{entry.crew_chief_name}</span>
+                    <span className="total-hours">{calculateTotalHours(entry.time_entries)}</span>
+                  </div>
+                  <div className="entry-card-footer" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div><strong>Company:</strong> {entry.company_name}</div>
+                    <div>
+                      <strong>Times:</strong>
+                      {entry.time_entries?.map((te, idx) => (
+                        <span key={idx} style={{ marginLeft: '0.5rem' }}>
+                          {te.time_in} - {te.time_out}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         )}
       </div>
     </div>

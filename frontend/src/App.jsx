@@ -66,10 +66,10 @@ function App() {
     <Router>
       <div className="app">
         <nav className="navbar">
-          <div className="nav-brand">
+          <Link to="/" className="nav-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
             <img src="/karmastaff logo.png" alt="Karma Staff Logo" className="nav-logo" />
             <h1>Timesheet System</h1>
-          </div>
+          </Link>
           
           <button className="hamburger-menu" onClick={toggleMenu}>
             <span></span>
