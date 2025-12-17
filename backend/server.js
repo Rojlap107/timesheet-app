@@ -13,6 +13,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy - Required for secure cookies behind a proxy (like Nginx, Heroku, Render, etc.)
+app.set('trust proxy', 1);
+
 // Middleware
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
