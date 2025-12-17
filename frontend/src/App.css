@@ -575,6 +575,11 @@
 }
 
 @media (max-width: 768px) {
+  /* Hamburger Menu visible on mobile */
+  .hamburger-menu {
+    display: flex;
+  }
+
   /* Removed old navbar responsive styles */
   
   .form-row {
