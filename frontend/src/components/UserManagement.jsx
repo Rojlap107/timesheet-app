@@ -14,7 +14,8 @@ function UserManagement() {
     password: '',
     full_name: '',
     email: '',
-    company_id: ''
+    company_id: '',
+    role: 'program_manager'
   });
 
   useEffect(() => {
@@ -54,10 +55,10 @@ function UserManagement() {
         setMessage('User updated successfully');
       } else {
         await userAPI.createUser(formData);
-        setMessage('Program Manager created successfully');
+        setMessage('User created successfully');
       }
 
-      setFormData({ username: '', password: '', full_name: '', email: '', company_id: '' });
+      setFormData({ username: '', password: '', full_name: '', email: '', company_id: '', role: 'program_manager' });
       setShowForm(false);
       setEditingUser(null);
       loadUsers();
@@ -75,7 +76,8 @@ function UserManagement() {
       password: '',
       full_name: user.full_name || '',
       email: user.email || '',
-      company_id: user.company_id
+      company_id: user.company_id || '',
+      role: user.role || 'program_manager'
     });
     setShowForm(true);
   };
@@ -99,7 +101,16 @@ function UserManagement() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingUser(null);
-    setFormData({ username: '', password: '', full_name: '', email: '', company_id: '' });
+    setFormData({ username: '', password: '', full_name: '', email: '', company_id: '', role: 'program_manager' });
+  };
+
+  const formatRole = (role) => {
+    switch (role) {
+      case 'program_manager': return 'Program Manager';
+      case 'admin': return 'Admin';
+      case 'accountant': return 'Accountant';
+      default: return role;
+    }
   };
 
   return (
@@ -121,7 +132,7 @@ function UserManagement() {
 
       {showForm && (
         <div className="user-form-container">
-          <h3>{editingUser ? 'Edit Program Manager' : 'Create New Program Manager'}</h3>
+          <h3>{editingUser ? 'Edit User' : 'Create New User'}</h3>
           <form onSubmit={handleSubmit} className="admin-form">
             <div className="form-row">
               <div className="form-group">
@@ -158,21 +169,35 @@ function UserManagement() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="company">Company *</label>
+                <label htmlFor="role">Role *</label>
                 <select
-                  id="company"
-                  value={formData.company_id}
-                  onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
+                  id="role"
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   required
                 >
-                  <option value="">Select Company</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name} ({company.abbreviation})
-                    </option>
-                  ))}
+                  <option value="program_manager">Program Manager</option>
+                  <option value="admin">Admin</option>
+                  <option value="accountant">Accountant</option>
                 </select>
               </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="company">Company *</label>
+              <select
+                id="company"
+                value={formData.company_id}
+                onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
+                required
+              >
+                <option value="">Select Company</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name} ({company.abbreviation})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
@@ -203,7 +228,7 @@ function UserManagement() {
       {loading ? (
         <p>Loading users...</p>
       ) : users.length === 0 ? (
-        <p>No program managers found</p>
+        <p>No users found</p>
       ) : (
         <>
           {/* Desktop Table */}
@@ -211,8 +236,8 @@ function UserManagement() {
             <thead>
               <tr>
                 <th>Username</th>
+                <th>Role</th>
                 <th>Full Name</th>
-                <th>Email</th>
                 <th>Company</th>
                 <th>Created</th>
                 <th>Actions</th>
@@ -222,8 +247,8 @@ function UserManagement() {
               {users.map((user) => (
                 <tr key={user.id}>
                   <td>{user.username}</td>
+                  <td>{formatRole(user.role)}</td>
                   <td>{user.full_name || '-'}</td>
-                  <td>{user.email || '-'}</td>
                   <td>{user.company_name} ({user.company_abbr})</td>
                   <td>{new Date(user.created_at).toLocaleDateString()}</td>
                   <td>
@@ -248,8 +273,8 @@ function UserManagement() {
                   <h4>{user.full_name || user.username}</h4>
                 </div>
                 <div className="mobile-card-content">
-                  <p>username: {user.username}</p>
-                  <p>Email: {user.email || '-'}</p>
+                  <p>Username: {user.username}</p>
+                  <p>Role: {formatRole(user.role)}</p>
                   <p>Company: {user.company_name} ({user.company_abbr})</p>
                   <p className="created-at">created on {new Date(user.created_at).toLocaleDateString()}</p>
                 </div>

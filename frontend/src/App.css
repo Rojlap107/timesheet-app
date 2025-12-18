@@ -378,84 +378,161 @@
   margin-bottom: 3rem;
 }
 
-.job-id-preview {
-  background-color: #f1f2f6;
-  padding: 1.5rem;
-  border-radius: 8px;
-  text-align: center;
-  margin: 2rem 0;
-  border: 2px dashed #cbd5e0;
-  font-size: 1.2rem;
-  color: #2c3e50;
+/* New Nested Form Styles */
+.global-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.jobs-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.job-block {
+  background: #f8f9fa;
+  border: 1px solid #e1e1e1;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 1rem;
+}
+
+.job-id-input {
+  flex: 1;
+  max-width: 300px;
+  margin-bottom: 0;
+}
+
+.btn-remove-job {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* Crew Rows */
+.crews-list {
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
-.job-id-preview strong {
+.crew-row-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
+  gap: 1rem;
+  font-weight: 600;
   color: #7f8c8d;
   font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  padding: 0 1rem;
 }
 
-.job-id-preview span {
-  font-weight: 700;
-  font-size: 1.5rem;
-  color: #3498db;
-}
-
-/* Time Entries */
-.time-entries-section {
-  margin: 2rem 0;
-  padding: 1.5rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.time-entries-section h3 {
-  color: #2c3e50;
-  margin-bottom: 1rem;
-}
-
-.time-entry-row {
-  display: flex;
-  align-items: center;
+.crew-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
   gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
+  align-items: center;
   background: white;
+  padding: 1rem;
   border-radius: 4px;
   border: 1px solid #ddd;
 }
 
-.time-entry-number {
-  font-weight: bold;
-  color: #7f8c8d;
-  min-width: 30px;
-}
-
-.time-entry-inputs {
-  display: flex;
-  gap: 1rem;
-  flex: 1;
-  align-items: flex-end;
-}
-
-.time-entry-inputs .form-group {
-  flex: 1;
+.crew-row .form-group {
   margin-bottom: 0;
 }
 
-.total-hours {
-  font-size: 1.2rem;
+.time-inputs {
+  display: contents; /* Flatten children into grid */
+}
+
+.total-display {
+  font-weight: bold;
   color: #2c3e50;
-  padding: 1rem;
-  background-color: #e8f4f8;
-  border-radius: 4px;
   text-align: center;
-  margin: 1.5rem 0;
+}
+
+.btn-remove-crew {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  text-align: center;
+}
+
+.btn-add-crew {
+  margin-top: 1rem;
+  background: none;
+  border: 2px dashed #3498db;
+  color: #3498db;
+  padding: 0.75rem;
+  width: 100%;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-add-crew:hover {
+  background: #f0f7fb;
+}
+
+.btn-add-job {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  padding: 1rem;
+  width: 100%;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.form-actions-main {
+  margin-top: 2rem;
+}
+
+.submit-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 1rem;
+  width: 100%;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background: #219150;
+}
+
+.mobile-label {
+  display: none;
 }
 
 /* Entries List */
@@ -920,5 +997,266 @@
   
   .mobile-card-actions .btn-delete-sm {
     background-color: #ff3b30; /* Red */
+  }
+
+  /* Form Styles for Mobile */
+  .global-section {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .job-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .job-id-input {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .crew-row-header {
+    display: none;
+  }
+
+  .crew-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .time-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .total-display {
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 4px;
+  }
+  
+  .mobile-label {
+    display: inline;
+    color: #7f8c8d;
+    font-weight: normal;
+  }
+
+  .action-col {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .btn-remove-crew {
+    background: #e74c3c;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Search Bar */
+.search-container {
+  margin-bottom: 1.5rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+/* Table Filters */
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-icon {
+  font-size: 0.8rem;
+  color: #bdc3c7;
+  transition: color 0.2s;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.filter-icon:hover {
+  background-color: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.filter-icon.active {
+  color: #3498db; /* Blue when active */
+  background-color: white;
+}
+
+/* Override th color for icon visibility if needed, or adjust icon color */
+.entries-table th .filter-icon.active {
+  color: #3498db;
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 5px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 0.5rem;
+  z-index: 100;
+  min-width: 220px;
+  color: #2c3e50; /* Reset text color */
+  font-weight: normal;
+}
+
+.filter-options-list {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-bottom: 0.5rem;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.filter-option:hover {
+  background-color: #f1f2f6;
+}
+
+.filter-option input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+.btn-filter-link {
+  background: none;
+  border: none;
+  color: #3498db;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+.btn-filter-link:hover {
+  text-decoration: underline;
+}
+
+.no-matches {
+  padding: 0.5rem;
+  color: #7f8c8d;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Combobox */
+.combobox-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.combobox-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.combobox-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.combobox-dropdown li {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.combobox-dropdown li:hover {
+  background-color: #f8f9fa;
+}
+
+.combobox-dropdown li.no-match {
+  color: #3498db;
+  font-style: italic;
+  cursor: default;
+}
+
+/* Additional Mobile Adjustments */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .combobox-input {
+    font-size: 14px; /* Match body size to reduce size */
+    padding: 0.5rem;
+  }
+  
+  /* Ensure inputs don't overflow */
+  input, select, textarea {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .job-block, .timesheet-form-container {
+    padding: 1rem;
+    overflow-x: hidden;
+  }
+  
+  /* Ensure dropdowns don't overflow */
+  .combobox-dropdown {
+    width: 100%;
+    max-width: 100%;
   }
 }

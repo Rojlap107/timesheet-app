@@ -80,8 +80,8 @@ export function initializeDatabase() {
         CREATE TABLE IF NOT EXISTS timesheet_entries (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           unique_id TEXT UNIQUE NOT NULL,
-          job_id TEXT UNIQUE NOT NULL,
-          job_type TEXT NOT NULL,
+          job_id TEXT NOT NULL,
+          job_type TEXT,
           company_id INTEGER NOT NULL,
           crew_chief_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,

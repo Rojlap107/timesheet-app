@@ -39,7 +39,6 @@ function App() {
       await authAPI.logout();
       setUser(null);
       setIsMenuOpen(false);
-      // Force redirect to home page and clear history
       window.location.href = '/';
     } catch (error) {
       console.error('Logout failed:', error);
@@ -62,11 +61,22 @@ function App() {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
+  // Role-based Access Helpers
+  const isAccountant = user.role === 'accountant';
+  const isAdmin = user.role === 'admin';
+  const isProgramManager = user.role === 'program_manager';
+
+  // Determine default redirect for root path
+  const getDefaultRedirect = () => {
+    if (isAccountant) return "/export";
+    return "/"; // Home for admin and pm
+  };
+
   return (
     <Router>
       <div className="app">
         <nav className="navbar">
-          <Link to="/" className="nav-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={isAccountant ? "/export" : "/"} className="nav-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
             <img src="/karmastaff logo.png" alt="Karma Staff Logo" className="nav-logo" />
             <h1>Timesheet System</h1>
           </Link>
@@ -78,10 +88,18 @@ function App() {
           </button>
 
           <div className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
-            <Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
-            <Link to="/entries" onClick={() => setIsMenuOpen(false)}>Entries</Link>
-            <Link to="/export" onClick={() => setIsMenuOpen(false)}>Export</Link>
-            {user.role === 'admin' && (
+            {!isAccountant && (
+              <>
+                <Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
+                <Link to="/entries" onClick={() => setIsMenuOpen(false)}>Entries</Link>
+              </>
+            )}
+            
+            {(isAdmin || isAccountant) && (
+              <Link to="/export" onClick={() => setIsMenuOpen(false)}>Export</Link>
+            )}
+            
+            {isAdmin && (
               <Link to="/admin" onClick={() => setIsMenuOpen(false)}>Admin Dashboard</Link>
             )}
             
@@ -99,11 +117,39 @@ function App() {
 
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<TimesheetForm user={user} />} />
-            <Route path="/entries" element={<EntriesPage user={user} />} />
-            <Route path="/export" element={<ExportPage user={user} />} />
-            {user.role === 'admin' && <Route path="/admin" element={<AdminDashboard />} />}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Home (Timesheet Form) - Admin & PM only */}
+            <Route 
+              path="/" 
+              element={
+                !isAccountant ? <TimesheetForm user={user} /> : <Navigate to="/export" replace />
+              } 
+            />
+            
+            {/* Entries - Admin & PM only */}
+            <Route 
+              path="/entries" 
+              element={
+                !isAccountant ? <EntriesPage user={user} /> : <Navigate to="/export" replace />
+              } 
+            />
+            
+            {/* Export - Admin & Accountant only */}
+            <Route 
+              path="/export" 
+              element={
+                (isAdmin || isAccountant) ? <ExportPage user={user} /> : <Navigate to="/" replace />
+              } 
+            />
+            
+            {/* Admin Dashboard - Admin only */}
+            <Route 
+              path="/admin" 
+              element={
+                isAdmin ? <AdminDashboard /> : <Navigate to="/" replace />
+              } 
+            />
+            
+            <Route path="*" element={<Navigate to={getDefaultRedirect()} replace />} />
           </Routes>
         </main>
       </div>

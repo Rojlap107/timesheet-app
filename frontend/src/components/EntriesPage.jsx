@@ -90,7 +90,7 @@ function EntriesPage({ user }) {
                 <th>Job ID</th>
                 <th>Date</th>
                 <th>Company</th>
-                <th>Crew Chief</th>
+                <th>Staff</th>
                 <th>Total Hours</th>
                 {user.role === 'admin' && <th>Created By</th>}
                 <th>Actions</th>
